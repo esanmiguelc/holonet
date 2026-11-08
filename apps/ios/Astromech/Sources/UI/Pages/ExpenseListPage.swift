@@ -27,8 +27,10 @@ struct ExpenseListPage: View {
                 .navigationTitle("Expenses")
                 .navigationDestination(for: Expense.self, destination: ExpenseDetailPage.init)
                 .toolbar {
-                    ToolbarItem(placement: .primaryAction) {
-                        scanButton
+                    if !expenses.isEmpty {
+                        ToolbarItem(placement: .primaryAction) {
+                            scanButton
+                        }
                     }
                 }
         }
@@ -50,7 +52,7 @@ struct ExpenseListPage: View {
     private var content: some View {
         if expenses.isEmpty {
             ContentUnavailableView {
-                Label("No Expenses", systemImage: "doc.text.viewfinder")
+                Label("No Expenses", systemImage: "doc.viewfinder")
             } description: {
                 Text(DocumentScannerView.isSupported
                     ? "Scan a receipt to record its RNC, NCF, ITBIS and totals."
