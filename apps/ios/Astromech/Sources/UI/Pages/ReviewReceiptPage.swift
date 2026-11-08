@@ -25,13 +25,11 @@ struct ReviewReceiptPage: View {
         NavigationStack {
             ReceiptForm(draft: $draft, missingFields: missingFields) {
                 if isOfferingSaveAnyway {
-                    NoticeBanner(message: "Some details are missing. Tap Save again to keep this expense anyway.")
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
+                    banner("Some details are missing. Tap Save again to keep this expense anyway.", style: .caution)
                 } else if let failure {
-                    NoticeBanner(message: failure.message)
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
+                    banner(failure.message, style: .caution)
+                } else {
+                    banner("Read on this device by Apple Intelligence. Check it against the receipt.", style: .information)
                 }
             }
             .navigationTitle("Review Receipt")
@@ -51,6 +49,12 @@ struct ReviewReceiptPage: View {
             }
         }
         .interactiveDismissDisabled()
+    }
+
+    private func banner(_ message: String, style: NoticeStyle) -> some View {
+        NoticeBanner(message: message, style: style)
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
     }
 
     private func save() {
