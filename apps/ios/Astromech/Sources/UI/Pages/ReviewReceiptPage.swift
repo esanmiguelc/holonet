@@ -6,6 +6,8 @@ struct ReviewReceiptPage: View {
     let onDiscard: () -> Void
     @State private var draft: ReceiptDraft
     @State private var isConfirmingDiscard = false
+    @State private var missingFields: MissingFieldVisibility
+    @State private var isOfferingSaveAnyway = false
 
     init(
         reading: ReceiptReading,
@@ -16,12 +18,17 @@ struct ReviewReceiptPage: View {
         self.onSave = onSave
         self.onDiscard = onDiscard
         _draft = State(initialValue: reading.draft)
+        _missingFields = State(initialValue: reading.failure == nil ? .flagged : .deferred)
     }
 
     var body: some View {
         NavigationStack {
-            ReceiptForm(draft: $draft) {
-                if let failure {
+            ReceiptForm(draft: $draft, missingFields: missingFields) {
+                if isOfferingSaveAnyway {
+                    NoticeBanner(message: "Some details are missing. Tap Save again to keep this expense anyway.")
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.clear)
+                } else if let failure {
                     NoticeBanner(message: failure.message)
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
@@ -39,11 +46,20 @@ struct ReviewReceiptPage: View {
                         }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { onSave(draft) }
+                    Button("Save", action: save)
                 }
             }
         }
         .interactiveDismissDisabled()
+    }
+
+    private func save() {
+        if missingFields == .deferred, draft.issues.contains(where: \.isMissingField) {
+            missingFields = .flagged
+            isOfferingSaveAnyway = true
+        } else {
+            onSave(draft)
+        }
     }
 
     private func discard() {

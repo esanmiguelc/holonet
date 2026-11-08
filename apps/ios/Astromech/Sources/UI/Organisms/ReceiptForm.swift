@@ -2,13 +2,18 @@ import SwiftUI
 
 struct ReceiptForm<Notice: View>: View {
     @Binding var draft: ReceiptDraft
+    var missingFields = MissingFieldVisibility.flagged
     @ViewBuilder let notice: Notice
     @FocusState private var focusedField: ReceiptField?
     @State private var isViewingScan = false
 
     var body: some View {
         Form {
-            notice
+            Section { notice }
+
+            if let message = draft.attentionMessage(missingFields: missingFields) {
+                Section { AttentionSummary(message: message) }
+            }
 
             if let scanImage = draft.scanImage {
                 Section {
@@ -23,9 +28,7 @@ struct ReceiptForm<Notice: View>: View {
 
             Section("Receipt") {
                 textRow(.ncf, label: ReceiptField.ncf.title, prompt: "B0100000000", input: .code, text: $draft.ncfText)
-                ValidatedRow(issues: draft.issues(for: .invoiceDate)) {
-                    OptionalDatePicker(title: ReceiptField.invoiceDate.title, date: $draft.invoiceDate)
-                }
+                OptionalDatePicker(title: ReceiptField.invoiceDate.title, date: $draft.invoiceDate)
             }
 
             Section("Amounts (RD$)") {
@@ -58,14 +61,14 @@ struct ReceiptForm<Notice: View>: View {
         input: FormTextInput,
         text: Binding<String>
     ) -> some View {
-        let issues = draft.issues(for: field)
+        let issues = draft.issues(for: field, missingFields: missingFields)
         return ValidatedRow(issues: issues) {
             FormTextField(field: field, label: label, prompt: prompt, input: input, issues: issues, focus: $focusedField, text: text)
         }
     }
 
     private func amountRow(_ field: ReceiptField, amount: Binding<Decimal?>) -> some View {
-        let issues = draft.issues(for: field)
+        let issues = draft.issues(for: field, missingFields: missingFields)
         return ValidatedRow(issues: issues) {
             AmountField(field: field, issues: issues, focus: $focusedField, amount: amount)
         }

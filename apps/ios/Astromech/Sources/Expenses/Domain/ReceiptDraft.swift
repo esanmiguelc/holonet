@@ -25,8 +25,19 @@ struct ReceiptDraft: Equatable, Sendable {
         ].compactMap(\.self)
     }
 
-    func issues(for field: ReceiptField) -> [ReceiptIssue] {
-        issues.filter { $0.field == field }
+    func visibleIssues(missingFields: MissingFieldVisibility) -> [ReceiptIssue] {
+        switch missingFields {
+        case .flagged: issues
+        case .deferred: issues.filter { !$0.isMissingField }
+        }
+    }
+
+    func issues(for field: ReceiptField, missingFields: MissingFieldVisibility = .flagged) -> [ReceiptIssue] {
+        visibleIssues(missingFields: missingFields).filter { $0.field == field }
+    }
+
+    func fieldsNeedingAttention(missingFields: MissingFieldVisibility = .flagged) -> Int {
+        Set(visibleIssues(missingFields: missingFields).map(\.field)).count
     }
 
     private func documentIssue(

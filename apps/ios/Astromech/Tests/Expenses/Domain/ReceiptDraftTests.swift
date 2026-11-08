@@ -78,6 +78,23 @@ struct ReceiptDraftTests {
         #expect(draft.issues == [.unrecognizedRNC, .missing(.ncf), .missing(.itbis)])
     }
 
+    @Test func deferringMissingFieldsStillReportsInvalidValues() {
+        let draft = ReceiptDraft(rncText: "123")
+        #expect(draft.visibleIssues(missingFields: .deferred) == [.unrecognizedRNC])
+        #expect(draft.issues(for: .total, missingFields: .deferred).isEmpty)
+    }
+
+    @Test func countsAFieldOnceHoweverManyIssuesItHas() {
+        var draft = Self.complete
+        draft.amounts.total = 2000
+        draft.rncText = "123"
+        #expect(draft.fieldsNeedingAttention() == 2)
+    }
+
+    @Test func nothingNeedsAttentionOnACompleteReceipt() {
+        #expect(Self.complete.fieldsNeedingAttention() == 0)
+    }
+
     @Test func aDraftWithNothingEnteredAndNoScanIsEmpty() {
         #expect(ReceiptDraft().isEmpty)
     }
