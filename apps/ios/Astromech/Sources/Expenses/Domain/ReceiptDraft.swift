@@ -10,6 +10,7 @@ struct ReceiptDraft: Equatable, Sendable {
 
     var rnc: RNC? { RNC(rncText) }
     var ncf: NCF? { NCF(ncfText) }
+    var isEmpty: Bool { self == ReceiptDraft() }
 
     var issues: [ReceiptIssue] {
         [

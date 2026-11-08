@@ -5,6 +5,7 @@ struct ReviewReceiptPage: View {
     let onSave: (ReceiptDraft) -> Void
     let onDiscard: () -> Void
     @State private var draft: ReceiptDraft
+    @State private var isConfirmingDiscard = false
 
     init(
         reading: ReceiptReading,
@@ -31,7 +32,12 @@ struct ReviewReceiptPage: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Discard", role: .destructive, action: onDiscard)
+                    Button("Discard", role: .destructive, action: discard)
+                        .confirmationDialog("Discard this receipt?", isPresented: $isConfirmingDiscard, titleVisibility: .visible) {
+                            Button("Discard Receipt", role: .destructive, action: onDiscard)
+                        } message: {
+                            Text("The scan and anything you've entered will be lost.")
+                        }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { onSave(draft) }
@@ -39,6 +45,14 @@ struct ReviewReceiptPage: View {
             }
         }
         .interactiveDismissDisabled()
+    }
+
+    private func discard() {
+        if draft.isEmpty {
+            onDiscard()
+        } else {
+            isConfirmingDiscard = true
+        }
     }
 }
 

@@ -77,4 +77,12 @@ struct ReceiptDraftTests {
         draft.amounts.itbis = nil
         #expect(draft.issues == [.unrecognizedRNC, .missing(.ncf), .missing(.itbis)])
     }
+
+    @Test func aDraftWithNothingEnteredAndNoScanIsEmpty() {
+        #expect(ReceiptDraft().isEmpty)
+    }
+
+    @Test func aDraftHoldingOnlyAScanIsNotEmpty() {
+        #expect(!ReceiptDraft(scanImage: Data([0xFF])).isEmpty)
+    }
 }
