@@ -5,6 +5,10 @@ extension Character {
 }
 
 extension String {
+    var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
+
+    var isBlank: Bool { trimmed.isEmpty }
+
     var removingDocumentSeparators: String {
         filter { $0 != "-" && !$0.isWhitespace }
     }
