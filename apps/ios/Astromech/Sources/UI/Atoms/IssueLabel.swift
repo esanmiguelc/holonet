@@ -6,7 +6,7 @@ struct IssueLabel: View {
     var body: some View {
         Label(issue.message, systemImage: "exclamationmark.triangle.fill")
             .font(.footnote)
-            .foregroundStyle(.orange)
+            .foregroundStyle(Color.warning)
     }
 }
 

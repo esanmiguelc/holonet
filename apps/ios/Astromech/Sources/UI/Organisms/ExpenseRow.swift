@@ -18,7 +18,7 @@ struct ExpenseRow: View {
                     .monospacedDigit()
                 if !expense.issues.isEmpty {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color.warning)
                         .accessibilityLabel("Needs review")
                 }
             }
