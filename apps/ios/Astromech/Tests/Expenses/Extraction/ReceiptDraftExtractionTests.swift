@@ -30,7 +30,8 @@ struct ReceiptDraftExtractionTests {
         )
 
         #expect(draft.businessName == "Supermercado Nacional")
-        #expect(draft.rncText == "101010632")
+        #expect(draft.rncText == "1-01-01063-2")
+        #expect(draft.rnc?.digits == "101010632")
         #expect(draft.ncfText == "B0100000123")
         #expect(draft.invoiceDate == Self.santoDomingo.date(from: DateComponents(year: 2026, month: 11, day: 7, hour: 12)))
         #expect(draft.amounts == ReceiptAmounts(subtotal: 1000, itbis: 180, propina: 100, total: 1280))

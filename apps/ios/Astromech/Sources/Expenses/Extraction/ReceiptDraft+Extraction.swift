@@ -4,7 +4,7 @@ extension ReceiptDraft {
     init(decoding extraction: ReceiptExtraction, scanImage: Data?, calendar: Calendar = .current) {
         self.init(
             businessName: extraction.businessName?.trimmed ?? "",
-            rncText: Self.normalizedDocumentText(extraction.rnc, validatedAs: { RNC($0)?.digits }),
+            rncText: Self.normalizedDocumentText(extraction.rnc, validatedAs: { RNC($0)?.formatted }),
             ncfText: Self.normalizedDocumentText(extraction.ncf, validatedAs: { NCF($0)?.code }),
             invoiceDate: extraction.invoiceDate.flatMap { Self.calendarDay(fromPrinted: $0, in: calendar) },
             amounts: ReceiptAmounts(

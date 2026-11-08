@@ -24,9 +24,16 @@ struct AmountTextTests {
     }
 
     @Test(arguments: ["1280.5", "0.05", "1234567.89", "0"])
-    func editableTextRoundTripsWithoutGroupingOrLocale(value: String) {
+    func editableTextRoundTrips(value: String) {
         let amount = Decimal.exactly(value)
-        #expect(!amount.amountText.contains(","))
         #expect(Decimal(amountText: amount.amountText) == amount)
+    }
+
+    @Test func editableTextIsGroupedLikeAPrintedReceiptRegardlessOfDeviceLocale() {
+        #expect(Decimal.exactly("1234567.89").amountText == "1,234,567.89")
+    }
+
+    @Test func currencyTextUsesTheDominicanPesoSymbol() {
+        #expect(Decimal.exactly("16000").currencyText == "RD$16,000.00")
     }
 }

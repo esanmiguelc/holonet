@@ -23,10 +23,10 @@ extension Decimal {
     }
 
     var amountText: String {
-        formatted(.number.locale(Locale(identifier: "en_US_POSIX")).grouping(.never).precision(.fractionLength(2)))
+        formatted(.number.locale(Locale(identifier: "en_US")).precision(.fractionLength(2)))
     }
 
     var currencyText: String {
-        formatted(.currency(code: "DOP"))
+        formatted(.currency(code: "DOP").locale(Locale(identifier: "es_DO")))
     }
 }

@@ -16,19 +16,19 @@ struct ReceiptForm<Notice: View>: View {
                 }
             }
 
-            Section("Issuer") {
-                textRow(.businessName, label: ReceiptField.businessName.title, prompt: "Name", input: .name, text: $draft.businessName)
+            Section("Business") {
+                textRow(.businessName, label: "Name", prompt: ReceiptField.businessName.title, input: .name, text: $draft.businessName)
                 textRow(.rnc, label: ReceiptField.rnc.title, prompt: "9 or 11 digits", input: .documentNumber, text: $draft.rncText)
             }
 
-            Section("Comprobante") {
+            Section("Receipt") {
                 textRow(.ncf, label: ReceiptField.ncf.title, prompt: "B0100000000", input: .code, text: $draft.ncfText)
                 ValidatedRow(issues: draft.issues(for: .invoiceDate)) {
                     OptionalDatePicker(title: ReceiptField.invoiceDate.title, date: $draft.invoiceDate)
                 }
             }
 
-            Section("Amounts (DOP)") {
+            Section("Amounts (RD$)") {
                 amountRow(.subtotal, amount: $draft.amounts.subtotal)
                 amountRow(.itbis, amount: $draft.amounts.itbis)
                 amountRow(.propina, amount: $draft.amounts.propina)

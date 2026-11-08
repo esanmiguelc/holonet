@@ -1,7 +1,7 @@
 extension ReceiptField {
     var title: String {
         switch self {
-        case .businessName: "Business"
+        case .businessName: "Business name"
         case .rnc: "RNC"
         case .ncf: "NCF"
         case .invoiceDate: "Date"

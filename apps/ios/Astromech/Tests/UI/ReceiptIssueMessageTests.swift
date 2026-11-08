@@ -7,6 +7,10 @@ struct ReceiptIssueMessageTests {
         #expect(ReceiptIssue.missing(.propina).message == "Propina legal is missing")
     }
 
+    @Test func describesEveryNCFSeriesRatherThanOneType() {
+        #expect(ReceiptIssue.unrecognizedNCF.message == "Not a valid NCF. Expected B + 10 digits or E + 12 digits.")
+    }
+
     @Test func statesTheTotalTheAmountsActuallyComeTo() {
         let message = ReceiptIssue.amountsDoNotAddUp(expectedTotal: 1180).message
         #expect(message.hasPrefix("Subtotal + ITBIS + propina comes to"))
