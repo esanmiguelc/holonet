@@ -20,6 +20,11 @@ struct AmountField<Focus: Hashable>: View {
             text: $text
         )
         .onAppear { text = amount?.amountText ?? "" }
+        .onChange(of: focus.wrappedValue) { previous, current in
+            if previous == focusValue, current != focusValue {
+                text = amount?.amountText ?? ""
+            }
+        }
         .onChange(of: text) {
             if !amount.isDisplayed(as: text) {
                 amount = Decimal(amountText: text)
