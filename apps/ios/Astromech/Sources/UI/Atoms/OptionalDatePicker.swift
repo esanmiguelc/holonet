@@ -11,6 +11,8 @@ struct OptionalDatePicker: View {
                 Button("Clear \(title)", systemImage: "xmark.circle.fill") { date = nil }
                     .labelStyle(.iconOnly)
                     .buttonStyle(.borderless)
+                    .frame(minWidth: 44, minHeight: 44, alignment: .trailing)
+                    .contentShape(.rect)
                     .foregroundStyle(.secondary)
             }
         } else {

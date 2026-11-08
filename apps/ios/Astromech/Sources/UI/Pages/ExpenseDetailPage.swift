@@ -10,9 +10,7 @@ struct ExpenseDetailPage: View {
     }
 
     var body: some View {
-        Form {
-            ReceiptForm(draft: $draft)
-        }
+        ReceiptForm(draft: $draft)
         .navigationTitle(expense.businessName.isBlank ? "Expense" : expense.businessName)
         .navigationBarTitleDisplayMode(.inline)
         .onChange(of: draft) { expense.draft = draft }

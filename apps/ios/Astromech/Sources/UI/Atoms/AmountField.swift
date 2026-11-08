@@ -1,17 +1,22 @@
 import SwiftUI
 
 struct AmountField: View {
-    let title: String
+    let field: ReceiptField
+    let issues: [ReceiptIssue]
+    let focus: FocusState<ReceiptField?>.Binding
     @Binding var amount: Decimal?
     @State private var text = ""
 
     var body: some View {
-        LabeledContent(title) {
-            TextField("0.00", text: $text)
-                .keyboardType(.decimalPad)
-                .multilineTextAlignment(.trailing)
-                .monospacedDigit()
-        }
+        FormTextField(
+            field: field,
+            label: field.title,
+            prompt: "0.00",
+            input: .amount,
+            issues: issues,
+            focus: focus,
+            text: $text
+        )
         .onAppear { text = amount?.amountText ?? "" }
         .onChange(of: text) { amount = Decimal(amountText: text) }
     }
@@ -19,5 +24,6 @@ struct AmountField: View {
 
 #Preview {
     @Previewable @State var amount: Decimal? = 1280.5
-    Form { AmountField(title: "Total", amount: $amount) }
+    @Previewable @FocusState var focus: ReceiptField?
+    Form { AmountField(field: .total, issues: [], focus: $focus, amount: $amount) }
 }

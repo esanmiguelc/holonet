@@ -1,57 +1,79 @@
 import SwiftUI
 
-struct ReceiptForm: View {
+struct ReceiptForm<Notice: View>: View {
     @Binding var draft: ReceiptDraft
+    @ViewBuilder let notice: Notice
+    @FocusState private var focusedField: ReceiptField?
 
     var body: some View {
-        if let scanImage = draft.scanImage {
-            Section {
-                ScanImage(data: scanImage)
-                    .frame(maxWidth: .infinity, maxHeight: 280)
-            }
-        }
+        Form {
+            notice
 
-        Section("Issuer") {
-            row(.businessName) {
-                TextField(ReceiptField.businessName.title, text: $draft.businessName)
-                    .textInputAutocapitalization(.words)
-            }
-            row(.rnc) {
-                LabeledContent(ReceiptField.rnc.title) {
-                    TextField("9 or 11 digits", text: $draft.rncText)
-                        .keyboardType(.numbersAndPunctuation)
-                        .autocorrectionDisabled()
-                        .multilineTextAlignment(.trailing)
-                        .monospacedDigit()
+            if let scanImage = draft.scanImage {
+                Section {
+                    ScanImage(data: scanImage)
+                        .frame(maxWidth: .infinity, maxHeight: 280)
                 }
             }
-        }
 
-        Section("Comprobante") {
-            row(.ncf) {
-                LabeledContent(ReceiptField.ncf.title) {
-                    TextField("B0100000000", text: $draft.ncfText)
-                        .textInputAutocapitalization(.characters)
-                        .autocorrectionDisabled()
-                        .multilineTextAlignment(.trailing)
-                        .monospacedDigit()
+            Section("Issuer") {
+                textRow(.businessName, label: ReceiptField.businessName.title, prompt: "Name", input: .name, text: $draft.businessName)
+                textRow(.rnc, label: ReceiptField.rnc.title, prompt: "9 or 11 digits", input: .documentNumber, text: $draft.rncText)
+            }
+
+            Section("Comprobante") {
+                textRow(.ncf, label: ReceiptField.ncf.title, prompt: "B0100000000", input: .code, text: $draft.ncfText)
+                ValidatedRow(issues: draft.issues(for: .invoiceDate)) {
+                    OptionalDatePicker(title: ReceiptField.invoiceDate.title, date: $draft.invoiceDate)
                 }
             }
-            row(.invoiceDate) {
-                OptionalDatePicker(title: ReceiptField.invoiceDate.title, date: $draft.invoiceDate)
+
+            Section("Amounts (DOP)") {
+                amountRow(.subtotal, amount: $draft.amounts.subtotal)
+                amountRow(.itbis, amount: $draft.amounts.itbis)
+                amountRow(.propina, amount: $draft.amounts.propina)
+                amountRow(.total, amount: $draft.amounts.total)
             }
         }
-
-        Section("Amounts (DOP)") {
-            row(.subtotal) { AmountField(title: ReceiptField.subtotal.title, amount: $draft.amounts.subtotal) }
-            row(.itbis) { AmountField(title: ReceiptField.itbis.title, amount: $draft.amounts.itbis) }
-            row(.propina) { AmountField(title: ReceiptField.propina.title, amount: $draft.amounts.propina) }
-            row(.total) { AmountField(title: ReceiptField.total.title, amount: $draft.amounts.total) }
+        .onSubmit(focusNextField)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Button("Next Field", systemImage: "chevron.down", action: focusNextField)
+                    .disabled(focusedField?.nextInEditingOrder == nil)
+                Spacer()
+                Button("Done") { focusedField = nil }
+            }
         }
     }
 
-    private func row<Content: View>(_ field: ReceiptField, @ViewBuilder content: () -> Content) -> some View {
-        ValidatedRow(issues: draft.issues(for: field), content: content)
+    private func textRow(
+        _ field: ReceiptField,
+        label: String,
+        prompt: String,
+        input: FormTextInput,
+        text: Binding<String>
+    ) -> some View {
+        let issues = draft.issues(for: field)
+        return ValidatedRow(issues: issues) {
+            FormTextField(field: field, label: label, prompt: prompt, input: input, issues: issues, focus: $focusedField, text: text)
+        }
+    }
+
+    private func amountRow(_ field: ReceiptField, amount: Binding<Decimal?>) -> some View {
+        let issues = draft.issues(for: field)
+        return ValidatedRow(issues: issues) {
+            AmountField(field: field, issues: issues, focus: $focusedField, amount: amount)
+        }
+    }
+
+    private func focusNextField() {
+        focusedField = focusedField?.nextInEditingOrder
+    }
+}
+
+extension ReceiptForm where Notice == EmptyView {
+    init(draft: Binding<ReceiptDraft>) {
+        self.init(draft: draft) { EmptyView() }
     }
 }
 
@@ -62,5 +84,5 @@ struct ReceiptForm: View {
         ncfText: "B0100000123",
         amounts: ReceiptAmounts(subtotal: 1000, itbis: 180, total: 1280)
     )
-    Form { ReceiptForm(draft: $draft) }
+    NavigationStack { ReceiptForm(draft: $draft) }
 }

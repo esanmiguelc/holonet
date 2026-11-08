@@ -20,13 +20,12 @@ struct ReviewReceiptPage: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            ReceiptForm(draft: $draft) {
                 if let failure {
                     NoticeBanner(message: failure.message)
                         .listRowInsets(EdgeInsets())
                         .listRowBackground(Color.clear)
                 }
-                ReceiptForm(draft: $draft)
             }
             .navigationTitle("Review Receipt")
             .navigationBarTitleDisplayMode(.inline)
