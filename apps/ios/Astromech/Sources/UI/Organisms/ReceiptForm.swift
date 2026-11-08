@@ -3,6 +3,7 @@ import SwiftUI
 struct ReceiptForm<Notice: View>: View {
     @Binding var draft: ReceiptDraft
     var missingFields = MissingFieldVisibility.flagged
+    var isLoading = false
     @ViewBuilder let notice: Notice
     @FocusState private var focusedField: ReceiptField?
     @State private var isViewingScan = false
@@ -21,22 +22,26 @@ struct ReceiptForm<Notice: View>: View {
                 }
             }
 
-            Section("Business") {
-                textRow(.businessName, label: "Name", prompt: ReceiptField.businessName.title, input: .name, text: $draft.businessName)
-                textRow(.rnc, label: ReceiptField.rnc.title, prompt: "9 or 11 digits", input: .documentNumber, text: $draft.rncText)
-            }
+            Group {
+                Section("Business") {
+                    textRow(.businessName, label: "Name", prompt: ReceiptField.businessName.title, input: .name, text: $draft.businessName)
+                    textRow(.rnc, label: ReceiptField.rnc.title, prompt: "9 or 11 digits", input: .documentNumber, text: $draft.rncText)
+                }
 
-            Section("Receipt") {
-                textRow(.ncf, label: ReceiptField.ncf.title, prompt: "B0100000000", input: .code, text: $draft.ncfText)
-                OptionalDatePicker(title: ReceiptField.invoiceDate.title, date: $draft.invoiceDate)
-            }
+                Section("Receipt") {
+                    textRow(.ncf, label: ReceiptField.ncf.title, prompt: "B0100000000", input: .code, text: $draft.ncfText)
+                    OptionalDatePicker(title: ReceiptField.invoiceDate.title, date: $draft.invoiceDate)
+                }
 
-            Section("Amounts (RD$)") {
-                amountRow(.subtotal, amount: $draft.amounts.subtotal)
-                amountRow(.itbis, amount: $draft.amounts.itbis)
-                amountRow(.propina, amount: $draft.amounts.propina)
-                amountRow(.total, amount: $draft.amounts.total)
+                Section("Amounts (RD$)") {
+                    amountRow(.subtotal, amount: $draft.amounts.subtotal)
+                    amountRow(.itbis, amount: $draft.amounts.itbis)
+                    amountRow(.propina, amount: $draft.amounts.propina)
+                    amountRow(.total, amount: $draft.amounts.total)
+                }
             }
+            .disabled(isLoading)
+            .redacted(reason: isLoading ? .placeholder : [])
         }
         .fullScreenCover(isPresented: $isViewingScan) {
             if let scanImage = draft.scanImage {

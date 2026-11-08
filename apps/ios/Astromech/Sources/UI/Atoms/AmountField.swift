@@ -18,7 +18,16 @@ struct AmountField: View {
             text: $text
         )
         .onAppear { text = amount?.amountText ?? "" }
-        .onChange(of: text) { amount = Decimal(amountText: text) }
+        .onChange(of: text) {
+            if !amount.isDisplayed(as: text) {
+                amount = Decimal(amountText: text)
+            }
+        }
+        .onChange(of: amount) {
+            if !amount.isDisplayed(as: text), Decimal(amountText: text) != amount {
+                text = amount?.amountText ?? ""
+            }
+        }
     }
 }
 

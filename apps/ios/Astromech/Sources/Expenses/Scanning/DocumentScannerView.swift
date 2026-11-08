@@ -5,6 +5,7 @@ struct DocumentScannerView: UIViewControllerRepresentable {
     static var isSupported: Bool { VNDocumentCameraViewController.isSupported }
 
     let onScan: (ScannedDocument) -> Void
+    let onFailure: () -> Void
     let onCancel: () -> Void
 
     func makeUIViewController(context: Context) -> VNDocumentCameraViewController {
@@ -16,16 +17,18 @@ struct DocumentScannerView: UIViewControllerRepresentable {
     func updateUIViewController(_ scanner: VNDocumentCameraViewController, context: Context) {}
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onScan: onScan, onCancel: onCancel)
+        Coordinator(onScan: onScan, onFailure: onFailure, onCancel: onCancel)
     }
 
     @MainActor
     final class Coordinator: NSObject, @preconcurrency VNDocumentCameraViewControllerDelegate {
         let onScan: (ScannedDocument) -> Void
+        let onFailure: () -> Void
         let onCancel: () -> Void
 
-        init(onScan: @escaping (ScannedDocument) -> Void, onCancel: @escaping () -> Void) {
+        init(onScan: @escaping (ScannedDocument) -> Void, onFailure: @escaping () -> Void, onCancel: @escaping () -> Void) {
             self.onScan = onScan
+            self.onFailure = onFailure
             self.onCancel = onCancel
         }
 
@@ -43,7 +46,7 @@ struct DocumentScannerView: UIViewControllerRepresentable {
         }
 
         func documentCameraViewController(_ controller: VNDocumentCameraViewController, didFailWithError error: Error) {
-            onCancel()
+            onFailure()
         }
     }
 }

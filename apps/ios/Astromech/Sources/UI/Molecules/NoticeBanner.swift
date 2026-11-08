@@ -3,6 +3,7 @@ import SwiftUI
 enum NoticeStyle {
     case caution
     case information
+    case progress
 }
 
 struct NoticeBanner: View {
@@ -10,24 +11,30 @@ struct NoticeBanner: View {
     var style = NoticeStyle.caution
 
     var body: some View {
-        Label(message, systemImage: systemImage)
-            .font(.callout)
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(background, in: .rect(cornerRadius: 12))
+        Label {
+            Text(message)
+        } icon: {
+            icon
+        }
+        .font(.callout)
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(background, in: .rect(cornerRadius: 12))
     }
 
-    private var systemImage: String {
+    @ViewBuilder
+    private var icon: some View {
         switch style {
-        case .caution: "info.circle.fill"
-        case .information: "sparkles"
+        case .caution: Image(systemName: "info.circle.fill")
+        case .information: Image(systemName: "sparkles")
+        case .progress: ProgressView()
         }
     }
 
     private var background: Color {
         switch style {
         case .caution: .yellow.opacity(0.15)
-        case .information: Color(.secondarySystemGroupedBackground)
+        case .information, .progress: Color(.secondarySystemGroupedBackground)
         }
     }
 }

@@ -1,36 +1,29 @@
 import SwiftUI
 
 struct ReviewReceiptPage: View {
-    let failure: ReceiptReadingFailure?
+    let reading: Task<ReceiptReading, Never>
     let onSave: (ReceiptDraft) -> Void
     let onDiscard: () -> Void
     @State private var draft: ReceiptDraft
+    @State private var phase = ReceiptReviewPhase.reading
     @State private var isConfirmingDiscard = false
-    @State private var missingFields: MissingFieldVisibility
-    @State private var isOfferingSaveAnyway = false
 
     init(
-        reading: ReceiptReading,
+        coverImage: Data?,
+        reading: Task<ReceiptReading, Never>,
         onSave: @escaping (ReceiptDraft) -> Void,
         onDiscard: @escaping () -> Void
     ) {
-        failure = reading.failure
+        self.reading = reading
         self.onSave = onSave
         self.onDiscard = onDiscard
-        _draft = State(initialValue: reading.draft)
-        _missingFields = State(initialValue: reading.failure == nil ? .flagged : .deferred)
+        _draft = State(initialValue: ReceiptDraft(scanImage: coverImage))
     }
 
     var body: some View {
         NavigationStack {
-            ReceiptForm(draft: $draft, missingFields: missingFields) {
-                if isOfferingSaveAnyway {
-                    banner("Some details are missing. Tap Save again to keep this expense anyway.", style: .caution)
-                } else if let failure {
-                    banner(failure.message, style: .caution)
-                } else {
-                    banner("Read on this device by Apple Intelligence. Check it against the receipt.", style: .information)
-                }
+            ReceiptForm(draft: $draft, missingFields: phase.missingFields, isLoading: phase.isReading) {
+                phaseBanner
             }
             .navigationTitle("Review Receipt")
             .navigationBarTitleDisplayMode(.inline)
@@ -45,10 +38,27 @@ struct ReviewReceiptPage: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: save)
+                        .disabled(phase.isReading)
                 }
             }
         }
         .interactiveDismissDisabled()
+        .task { await finishReading() }
+        .onChange(of: draft) { phase.draftDidChange(to: draft) }
+    }
+
+    @ViewBuilder
+    private var phaseBanner: some View {
+        switch phase {
+        case .reading:
+            banner("Reading receipt…", style: .progress)
+        case .reviewing(readFailure: let failure?):
+            banner(failure.message, style: .caution)
+        case .reviewing(readFailure: nil):
+            banner("Read on this device by Apple Intelligence. Check it against the receipt.", style: .information)
+        case .confirmingIncomplete:
+            banner("Some details are missing. Tap Save again to keep this expense anyway.", style: .caution)
+        }
     }
 
     private func banner(_ message: String, style: NoticeStyle) -> some View {
@@ -57,11 +67,19 @@ struct ReviewReceiptPage: View {
             .listRowBackground(Color.clear)
     }
 
+    private func finishReading() async {
+        let result = await withTaskCancellationHandler {
+            await reading.value
+        } onCancel: {
+            reading.cancel()
+        }
+        guard !Task.isCancelled else { return }
+        draft = result.draft
+        phase = .reviewing(readFailure: result.failure)
+    }
+
     private func save() {
-        if missingFields == .deferred, draft.issues.contains(where: \.isMissingField) {
-            missingFields = .flagged
-            isOfferingSaveAnyway = true
-        } else {
+        if phase.requestSave(of: draft) {
             onSave(draft)
         }
     }
@@ -75,27 +93,24 @@ struct ReviewReceiptPage: View {
     }
 }
 
+@MainActor
+private func previewPage(_ reading: ReceiptReading) -> some View {
+    ReviewReceiptPage(coverImage: nil, reading: Task { reading }, onSave: { _ in }, onDiscard: {})
+}
+
 #Preview("Extracted") {
-    ReviewReceiptPage(
-        reading: ReceiptReading(
-            draft: ReceiptDraft(
-                businessName: "Supermercado Nacional",
-                rncText: "101010632",
-                ncfText: "B0100000123",
-                invoiceDate: .now,
-                amounts: ReceiptAmounts(subtotal: 1000, itbis: 180, propina: 100, total: 1280)
-            ),
-            failure: nil
+    previewPage(ReceiptReading(
+        draft: ReceiptDraft(
+            businessName: "Supermercado Nacional",
+            rncText: "1-01-01063-2",
+            ncfText: "B0100000123",
+            invoiceDate: .now,
+            amounts: ReceiptAmounts(subtotal: 1000, itbis: 180, propina: 100, total: 1280)
         ),
-        onSave: { _ in },
-        onDiscard: {}
-    )
+        failure: nil
+    ))
 }
 
 #Preview("Model unavailable") {
-    ReviewReceiptPage(
-        reading: ReceiptReading(draft: ReceiptDraft(), failure: .modelUnavailable(.appleIntelligenceNotEnabled)),
-        onSave: { _ in },
-        onDiscard: {}
-    )
+    previewPage(ReceiptReading(draft: ReceiptDraft(), failure: .modelUnavailable(.appleIntelligenceNotEnabled)))
 }

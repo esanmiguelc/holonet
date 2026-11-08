@@ -33,6 +33,18 @@ struct AmountTextTests {
         #expect(Decimal.exactly("1234567.89").amountText == "1,234,567.89")
     }
 
+    @Test func aMoreAccurateAmountCountsAsDisplayedByItsRoundedText() {
+        let amount: Decimal? = .exactly("1.234")
+        #expect(amount.isDisplayed(as: "1.23"))
+        #expect(!amount.isDisplayed(as: "1.24"))
+    }
+
+    @Test func noAmountIsDisplayedAsAnEmptyField() {
+        let amount: Decimal? = nil
+        #expect(amount.isDisplayed(as: ""))
+        #expect(!amount.isDisplayed(as: "12"))
+    }
+
     @Test func currencyTextUsesTheDominicanPesoSymbol() {
         #expect(Decimal.exactly("16000").currencyText == "RD$16,000.00")
     }

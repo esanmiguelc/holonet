@@ -4,14 +4,21 @@ import SwiftUI
 struct ExpenseListPage: View {
     private struct PendingReview: Identifiable {
         let id = UUID()
-        let reading: ReceiptReading
+        let coverImage: Data?
+        let reading: Task<ReceiptReading, Never>
+    }
+
+    private enum ScanOutcome {
+        case scanned(PendingReview)
+        case failed
     }
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.receiptReader) private var receiptReader
     @Query(sort: \Expense.createdAt, order: .reverse) private var expenses: [Expense]
     @State private var isScanning = false
-    @State private var isReading = false
+    @State private var scanOutcome: ScanOutcome?
+    @State private var isShowingScanFailure = false
     @State private var pendingReview: PendingReview?
 
     var body: some View {
@@ -24,20 +31,18 @@ struct ExpenseListPage: View {
                         scanButton
                     }
                 }
-                .overlay {
-                    if isReading {
-                        ProgressView("Reading receipt…")
-                            .padding()
-                            .background(.regularMaterial, in: .rect(cornerRadius: 12))
-                    }
-                }
         }
-        .fullScreenCover(isPresented: $isScanning) {
-            DocumentScannerView(onScan: read, onCancel: { isScanning = false })
+        .fullScreenCover(isPresented: $isScanning, onDismiss: presentScanOutcome) {
+            DocumentScannerView(onScan: finishScanning, onFailure: failScanning, onCancel: { isScanning = false })
                 .ignoresSafeArea()
         }
         .sheet(item: $pendingReview) { review in
-            ReviewReceiptPage(reading: review.reading, onSave: save, onDiscard: { pendingReview = nil })
+            ReviewReceiptPage(coverImage: review.coverImage, reading: review.reading, onSave: save, onDiscard: { pendingReview = nil })
+        }
+        .alert("Scan Failed", isPresented: $isShowingScanFailure) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("The scan couldn't be completed. Please try again.")
         }
     }
 
@@ -67,16 +72,30 @@ struct ExpenseListPage: View {
 
     private var scanButton: some View {
         Button("Scan Receipt", systemImage: "doc.viewfinder") { isScanning = true }
-            .disabled(!DocumentScannerView.isSupported || isReading)
+            .disabled(!DocumentScannerView.isSupported)
     }
 
-    private func read(_ document: ScannedDocument) {
+    private func finishScanning(_ document: ScannedDocument) {
+        let reader = receiptReader
+        scanOutcome = .scanned(PendingReview(
+            coverImage: document.coverImage,
+            reading: Task { await reader.read(document) }
+        ))
         isScanning = false
-        isReading = true
-        Task {
-            pendingReview = PendingReview(reading: await receiptReader.read(document))
-            isReading = false
+    }
+
+    private func failScanning() {
+        scanOutcome = .failed
+        isScanning = false
+    }
+
+    private func presentScanOutcome() {
+        switch scanOutcome {
+        case .scanned(let review): pendingReview = review
+        case .failed: isShowingScanFailure = true
+        case nil: break
         }
+        scanOutcome = nil
     }
 
     private func save(_ draft: ReceiptDraft) {

@@ -30,3 +30,9 @@ extension Decimal {
         formatted(.currency(code: "DOP").locale(Locale(identifier: "es_DO")))
     }
 }
+
+extension Decimal? {
+    func isDisplayed(as text: String) -> Bool {
+        (self?.amountText ?? "") == text
+    }
+}
