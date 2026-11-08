@@ -1,10 +1,12 @@
+import SwiftData
 import SwiftUI
 
 @main
 struct AstromechApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ExpenseListPage()
         }
+        .modelContainer(for: Expense.self)
     }
 }
