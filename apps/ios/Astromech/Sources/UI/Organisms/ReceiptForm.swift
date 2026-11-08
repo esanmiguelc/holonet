@@ -4,6 +4,7 @@ struct ReceiptForm<Notice: View>: View {
     @Binding var draft: ReceiptDraft
     @ViewBuilder let notice: Notice
     @FocusState private var focusedField: ReceiptField?
+    @State private var isViewingScan = false
 
     var body: some View {
         Form {
@@ -11,8 +12,7 @@ struct ReceiptForm<Notice: View>: View {
 
             if let scanImage = draft.scanImage {
                 Section {
-                    ScanImage(data: scanImage)
-                        .frame(maxWidth: .infinity, maxHeight: 280)
+                    ScanThumbnailButton(data: scanImage) { isViewingScan = true }
                 }
             }
 
@@ -33,6 +33,11 @@ struct ReceiptForm<Notice: View>: View {
                 amountRow(.itbis, amount: $draft.amounts.itbis)
                 amountRow(.propina, amount: $draft.amounts.propina)
                 amountRow(.total, amount: $draft.amounts.total)
+            }
+        }
+        .fullScreenCover(isPresented: $isViewingScan) {
+            if let scanImage = draft.scanImage {
+                ScanViewerPage(data: scanImage)
             }
         }
         .onSubmit(focusNextField)
