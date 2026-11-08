@@ -23,13 +23,14 @@ enum FormTextInput {
     }
 }
 
-struct FormTextField: View {
-    let field: ReceiptField
+struct FormTextField<Focus: Hashable>: View {
     let label: String
     let prompt: String
     let input: FormTextInput
-    let issues: [ReceiptIssue]
-    let focus: FocusState<ReceiptField?>.Binding
+    let accessibilityName: String
+    let hint: String
+    let focus: FocusState<Focus?>.Binding
+    let focusValue: Focus
     @Binding var text: String
 
     var body: some View {
@@ -41,24 +42,25 @@ struct FormTextField: View {
                 .multilineTextAlignment(.trailing)
                 .monospacedDigit()
                 .submitLabel(.next)
-                .focused(focus, equals: field)
-                .accessibilityLabel(field.title)
-                .accessibilityHint(issues.map(\.message).joined(separator: " "))
+                .focused(focus, equals: focusValue)
+                .accessibilityLabel(accessibilityName)
+                .accessibilityHint(hint)
         }
     }
 }
 
 #Preview {
     @Previewable @State var text = "101010633"
-    @Previewable @FocusState var focus: ReceiptField?
+    @Previewable @FocusState var focus: String?
     Form {
         FormTextField(
-            field: .rnc,
-            label: ReceiptField.rnc.title,
+            label: "RNC",
             prompt: "9 or 11 digits",
             input: .documentNumber,
-            issues: [.unrecognizedRNC],
+            accessibilityName: "RNC",
+            hint: "",
             focus: $focus,
+            focusValue: "rnc",
             text: $text
         )
     }

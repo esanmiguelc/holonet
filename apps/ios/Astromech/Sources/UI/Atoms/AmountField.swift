@@ -1,20 +1,22 @@
 import SwiftUI
 
-struct AmountField: View {
-    let field: ReceiptField
-    let issues: [ReceiptIssue]
-    let focus: FocusState<ReceiptField?>.Binding
+struct AmountField<Focus: Hashable>: View {
+    let title: String
+    let hint: String
+    let focus: FocusState<Focus?>.Binding
+    let focusValue: Focus
     @Binding var amount: Decimal?
     @State private var text = ""
 
     var body: some View {
         FormTextField(
-            field: field,
-            label: field.title,
+            label: title,
             prompt: "0.00",
             input: .amount,
-            issues: issues,
+            accessibilityName: title,
+            hint: hint,
             focus: focus,
+            focusValue: focusValue,
             text: $text
         )
         .onAppear { text = amount?.amountText ?? "" }
@@ -33,6 +35,6 @@ struct AmountField: View {
 
 #Preview {
     @Previewable @State var amount: Decimal? = 1280.5
-    @Previewable @FocusState var focus: ReceiptField?
-    Form { AmountField(field: .total, issues: [], focus: $focus, amount: $amount) }
+    @Previewable @FocusState var focus: String?
+    Form { AmountField(title: "Total", hint: "", focus: $focus, focusValue: "total", amount: $amount) }
 }

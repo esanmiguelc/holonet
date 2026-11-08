@@ -1,18 +1,19 @@
 import SwiftUI
 
 struct IssueLabel: View {
-    let issue: ReceiptIssue
+    let message: String
+    var font = Font.footnote
 
     var body: some View {
-        Label(issue.message, systemImage: "exclamationmark.triangle.fill")
-            .font(.footnote)
+        Label(message, systemImage: "exclamationmark.triangle.fill")
+            .font(font)
             .foregroundStyle(Color.warning)
     }
 }
 
 #Preview {
     VStack(alignment: .leading) {
-        IssueLabel(issue: .unrecognizedRNC)
-        IssueLabel(issue: .amountsDoNotAddUp(expectedTotal: 1180))
+        IssueLabel(message: "Not a valid RNC or cédula. Check the digits.")
+        IssueLabel(message: "Subtotal + ITBIS + propina comes to RD$1,180.00")
     }
 }

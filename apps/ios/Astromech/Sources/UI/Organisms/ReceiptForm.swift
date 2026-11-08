@@ -13,7 +13,7 @@ struct ReceiptForm<Notice: View>: View {
             Section { notice }
 
             if let message = draft.attentionMessage(missingFields: missingFields) {
-                Section { AttentionSummary(message: message) }
+                Section { IssueLabel(message: message, font: .subheadline.weight(.semibold)) }
             }
 
             if let scanImage = draft.scanImage {
@@ -66,17 +66,36 @@ struct ReceiptForm<Notice: View>: View {
         input: FormTextInput,
         text: Binding<String>
     ) -> some View {
-        let issues = draft.issues(for: field, missingFields: missingFields)
-        return ValidatedRow(issues: issues) {
-            FormTextField(field: field, label: label, prompt: prompt, input: input, issues: issues, focus: $focusedField, text: text)
+        let messages = issueMessages(for: field)
+        return ValidatedRow(messages: messages) {
+            FormTextField(
+                label: label,
+                prompt: prompt,
+                input: input,
+                accessibilityName: field.title,
+                hint: messages.joined(separator: " "),
+                focus: $focusedField,
+                focusValue: field,
+                text: text
+            )
         }
     }
 
     private func amountRow(_ field: ReceiptField, amount: Binding<Decimal?>) -> some View {
-        let issues = draft.issues(for: field, missingFields: missingFields)
-        return ValidatedRow(issues: issues) {
-            AmountField(field: field, issues: issues, focus: $focusedField, amount: amount)
+        let messages = issueMessages(for: field)
+        return ValidatedRow(messages: messages) {
+            AmountField(
+                title: field.title,
+                hint: messages.joined(separator: " "),
+                focus: $focusedField,
+                focusValue: field,
+                amount: amount
+            )
         }
+    }
+
+    private func issueMessages(for field: ReceiptField) -> [String] {
+        draft.issues(for: field, missingFields: missingFields).map(\.message)
     }
 
     private func focusNextField() {

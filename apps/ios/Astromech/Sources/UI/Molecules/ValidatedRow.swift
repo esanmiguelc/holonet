@@ -1,20 +1,20 @@
 import SwiftUI
 
 struct ValidatedRow<Content: View>: View {
-    let issues: [ReceiptIssue]
+    let messages: [String]
     @ViewBuilder let content: Content
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             content
-            ForEach(issues, id: \.self, content: IssueLabel.init)
+            ForEach(messages, id: \.self) { IssueLabel(message: $0) }
         }
     }
 }
 
 #Preview {
     Form {
-        ValidatedRow(issues: [.unrecognizedRNC]) {
+        ValidatedRow(messages: ["Not a valid RNC or cédula. Check the digits."]) {
             LabeledContent("RNC", value: "101010633")
         }
     }
